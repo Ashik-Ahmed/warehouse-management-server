@@ -24,6 +24,14 @@ async function run() {
 
         const productCollection = client.db("warehouseManagement").collection("products");
 
+        //get all products
+        app.get('/products', async (req, res) => {
+            const query = {};
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            console.log("Getting products");
+            res.send(products);
+        });
 
         // POST user: add a new item 
         app.post('/add', async (req, res) => {
@@ -31,6 +39,15 @@ async function run() {
             console.log("adding new item", newProduct);
             const result = await productCollection.insertOne(newProduct);
             res.send(result)
+        });
+
+        //get all products added by user email
+        app.get('/myItems', async (req, res) => {
+            const query = req.body.email;
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            console.log("Getting products");
+            res.send(products);
         });
 
     }
