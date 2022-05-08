@@ -12,6 +12,7 @@ const app = express();
 //use middleware
 app.use(cors());
 app.use(express.json());
+const jwt = require('jsonwebtoken');
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.m12jl.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -24,6 +25,17 @@ async function run() {
 
         const productCollection = client.db("warehouseManagement").collection("products");
 
+        app.post('/login', async (req, res) => {
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '15d'
+            });
+            console.log(accessToken);
+            res.send({ accessToken });
+        })
+
+
+
         //get all products
         app.get('/products', async (req, res) => {
             const query = {};
@@ -35,7 +47,6 @@ async function run() {
         // POST user: add a new item 
         app.post('/add', async (req, res) => {
             const newProduct = req.body;
-            console.log("adding new item", newProduct);
             const result = await productCollection.insertOne(newProduct);
             res.send(result)
         });
@@ -47,6 +58,18 @@ async function run() {
 
             const result = await productCollection.findOne(query);
             res.send(result);
+        })
+
+        // get products by user email 
+        app.get('/myproducts', async (req, res) => {
+            // const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+
+            const query = { email: email };
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+
         })
 
 
